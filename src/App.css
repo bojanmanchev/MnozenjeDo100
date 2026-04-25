@@ -1,0 +1,396 @@
+.app-shell {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  box-sizing: border-box;
+}
+
+.app-header,
+.panel,
+.card,
+.status-card,
+.summary-card,
+.feedback-card,
+.notice-banner {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.app-header,
+.panel {
+  background: #ffffff;
+  border: 1px solid #d9e4ff;
+  border-radius: 28px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panel-large {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.eyebrow,
+.section-label,
+.status-label,
+.hint {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.eyebrow,
+.section-label {
+  color: #5b56d7;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle,
+.section-copy p,
+.hint,
+.preview-line,
+.success-copy {
+  color: #475569;
+}
+
+.star-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: 36px;
+  max-width: 220px;
+}
+
+.star,
+.star-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff4bf;
+  color: #b77900;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.setup-grid,
+.status-grid,
+.summary-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.setup-grid {
+  grid-template-columns: 1.3fr 1fr;
+}
+
+.status-grid,
+.summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.card,
+.status-card,
+.summary-card,
+.game-card {
+  background: #f8fbff;
+  border: 1px solid #d9e4ff;
+  border-radius: 24px;
+}
+
+.card,
+.game-card {
+  padding: 20px;
+}
+
+.status-card,
+.summary-card {
+  padding: 18px;
+  text-align: center;
+}
+
+.status-card strong,
+.summary-card strong {
+  display: block;
+  font-size: 1.8rem;
+  color: #14213d;
+  margin-top: 8px;
+}
+
+.number-grid,
+.keypad {
+  display: grid;
+  gap: 12px;
+}
+
+.number-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.number-pill,
+.keypad-button,
+.primary-button,
+.secondary-button {
+  border: none;
+  border-radius: 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.number-pill,
+.keypad-button {
+  min-height: 56px;
+}
+
+.number-pill {
+  background: #ffffff;
+  color: #1e293b;
+  border: 2px solid #d9e4ff;
+}
+
+.number-pill.selected {
+  background: linear-gradient(135deg, #5b56d7, #8b5cf6);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.field input[type='number'],
+.field input[type='text'] {
+  border: 2px solid #bfd1ff;
+  border-radius: 18px;
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: #ffffff;
+  color: #14213d;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.toggle-row input {
+  width: 20px;
+  height: 20px;
+}
+
+.session-preview,
+.action-row,
+.action-row-wide {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 56px;
+  padding: 0 24px;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #5b56d7, #8b5cf6);
+  color: #ffffff;
+}
+
+.secondary-button,
+.keypad-button.secondary {
+  background: #e8eefc;
+  color: #1e293b;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.keypad-button:disabled,
+.number-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled),
+.keypad-button:hover:not(:disabled),
+.number-pill:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(91, 86, 215, 0.15);
+}
+
+.notice-banner {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  color: #155e75;
+  border-radius: 20px;
+  padding: 16px 18px;
+  font-weight: 700;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.question {
+  font-size: clamp(2.8rem, 10vw, 5rem);
+  font-weight: 800;
+  text-align: center;
+  color: #14213d;
+}
+
+.answer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.answer-field input {
+  text-align: center;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+}
+
+.keypad {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.keypad-button {
+  background: #ffffff;
+  color: #14213d;
+  border: 2px solid #d9e4ff;
+}
+
+.feedback-card {
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.feedback-card.success {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.feedback-card.warning {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+}
+
+.centered {
+  text-align: center;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+th,
+td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #dbe4f3;
+}
+
+th {
+  color: #334155;
+}
+
+.review-card {
+  overflow: hidden;
+}
+
+.review-card h3,
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 860px) {
+  .app-header,
+  .session-preview,
+  .action-row,
+  .action-row-wide {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .setup-grid,
+  .status-grid,
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .star-bank {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
+  .number-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    padding: 12px 10px 24px;
+  }
+
+  .app-header,
+  .panel,
+  .card,
+  .game-card {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .number-pill,
+  .keypad-button,
+  .primary-button,
+  .secondary-button,
+  .field input[type='number'],
+  .field input[type='text'] {
+    min-height: 52px;
+  }
+}
