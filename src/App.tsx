@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import {
   DEFAULT_CONFIG,
@@ -11,8 +11,10 @@ import {
   type GameConfig,
   type Question,
 } from './game'
+import { getInitialLocale, getTranslation, setStoredLocale, type Locale } from './i18n'
 
 type Screen = 'setup' | 'game' | 'summary'
+type RoundNotice = 'retryRound' | 'practiceRound' | null
 
 type Feedback = {
   isCorrect: boolean
@@ -33,15 +35,18 @@ type GameSession = {
 }
 
 const keypadButtons = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+const locales: Locale[] = ['en', 'mk']
 
 function App() {
+  const [locale, setLocale] = useState<Locale>(() => getInitialLocale())
   const [screen, setScreen] = useState<Screen>('setup')
   const [config, setConfig] = useState<GameConfig>(DEFAULT_CONFIG)
   const [session, setSession] = useState<GameSession | null>(null)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<Feedback | null>(null)
-  const [roundNotice, setRoundNotice] = useState<string | null>(null)
+  const [roundNotice, setRoundNotice] = useState<RoundNotice>(null)
 
+  const t = getTranslation(locale)
   const selectedNumbers = new Set(config.selectedNumbers)
   const currentQuestion = session?.questions[session.currentIndex] ?? null
   const questionCount = config.selectedNumbers.length * config.maxMultiplier
@@ -50,6 +55,17 @@ function App() {
     [session],
   )
   const starPreviewCount = Math.min(session?.correctCount ?? 0, 15)
+  const selectionSummary =
+    config.selectedNumbers.length > 0 ? config.selectedNumbers.join(', ') : t.chooseAtLeastOneNumber
+
+  useEffect(() => {
+    document.title = t.metaTitle
+    document.documentElement.lang = t.htmlLang
+  }, [t])
+
+  useEffect(() => {
+    setStoredLocale(locale)
+  }, [locale])
 
   const updateConfig = (partial: Partial<GameConfig>) => {
     setConfig((current) => ({ ...current, ...partial }))
@@ -120,7 +136,7 @@ function App() {
       })
       setAnswer('')
       setFeedback(null)
-      setRoundNotice("Retry round! Let's practice the tricky ones once more.")
+      setRoundNotice('retryRound')
       return
     }
 
@@ -169,7 +185,7 @@ function App() {
     })
     setAnswer('')
     setFeedback(null)
-    setRoundNotice('Practice round: only the questions that still need work.')
+    setRoundNotice('practiceRound')
     setScreen('game')
   }
 
@@ -212,20 +228,40 @@ function App() {
     }
   }
 
-  const selectionSummary =
-    config.selectedNumbers.length > 0 ? config.selectedNumbers.join(', ') : 'Choose at least one number'
+  const noticeText =
+    roundNotice === 'retryRound'
+      ? t.retryRoundNotice
+      : roundNotice === 'practiceRound'
+        ? t.practiceRoundNotice
+        : null
 
   return (
     <main className="app-shell">
       <section className="app-header">
-        <div>
-          <p className="eyebrow">Math game</p>
-          <h1>Star Multiplication Mission</h1>
-          <p className="subtitle">
-            Practice selected multiplication tables with a simple, mobile-friendly game.
-          </p>
+        <div className="header-copy">
+          <div>
+            <p className="eyebrow">{t.eyebrow}</p>
+            <h1>{t.title}</h1>
+            <p className="subtitle">{t.subtitle}</p>
+          </div>
+          <div className="language-switcher" role="group" aria-label={t.languageLabel}>
+            <span className="language-label">{t.languageLabel}</span>
+            <div className="language-options">
+              {locales.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`language-button ${locale === option ? 'active' : ''}`}
+                  onClick={() => setLocale(option)}
+                  aria-pressed={locale === option}
+                >
+                  {t.languageOptions[option]}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="star-bank" aria-label="Collected stars preview">
+        <div className="star-bank" aria-label={t.starBankAriaLabel}>
           {Array.from({ length: starPreviewCount }).map((_, index) => (
             <span key={index} className="star">
               ★
@@ -240,18 +276,15 @@ function App() {
       {screen === 'setup' ? (
         <section className="panel panel-large">
           <div className="section-copy">
-            <p className="section-label">Setup</p>
-            <h2>Choose what to practice</h2>
-            <p>
-              Pick the multiplication tables to train, choose how far to go, and start the
-              mission.
-            </p>
+            <p className="section-label">{t.setupLabel}</p>
+            <h2>{t.setupTitle}</h2>
+            <p>{t.setupDescription}</p>
           </div>
 
           <div className="setup-grid">
             <div className="card">
-              <h3>Numbers to practice</h3>
-              <p className="hint">Tap one or more numbers from 1 to {MAX_TABLE_NUMBER}.</p>
+              <h3>{t.numbersToPractice}</h3>
+              <p className="hint">{t.numberSelectionHint(MAX_TABLE_NUMBER)}</p>
               <div className="number-grid">
                 {Array.from({ length: MAX_TABLE_NUMBER }, (_, index) => index + 1).map((value) => (
                   <button
@@ -268,9 +301,9 @@ function App() {
             </div>
 
             <div className="card">
-              <h3>Session options</h3>
+              <h3>{t.sessionOptions}</h3>
               <label className="field">
-                <span>Max multiplier</span>
+                <span>{t.maxMultiplier}</span>
                 <input
                   type="number"
                   min={1}
@@ -294,30 +327,28 @@ function App() {
                   checked={config.shuffleQuestions}
                   onChange={(event) => updateConfig({ shuffleQuestions: event.target.checked })}
                 />
-                <span>Shuffle questions</span>
+                <span>{t.shuffleQuestions}</span>
               </label>
 
               <label className="toggle-row">
                 <input
                   type="checkbox"
                   checked={config.retryIncorrectAtEnd}
-                  onChange={(event) =>
-                    updateConfig({ retryIncorrectAtEnd: event.target.checked })
-                  }
+                  onChange={(event) => updateConfig({ retryIncorrectAtEnd: event.target.checked })}
                 />
-                <span>Retry missed questions once at the end</span>
+                <span>{t.retryIncorrectAtEnd}</span>
               </label>
             </div>
           </div>
 
           <div className="session-preview">
             <div>
-              <p className="section-label">Session preview</p>
+              <p className="section-label">{t.sessionPreview}</p>
               <p className="preview-line">
-                <strong>Numbers:</strong> {selectionSummary}
+                <strong>{t.numbersLabel}:</strong> {selectionSummary}
               </p>
               <p className="preview-line">
-                <strong>Questions:</strong> {questionCount}
+                <strong>{t.questionsLabel}:</strong> {questionCount}
               </p>
             </div>
             <button
@@ -326,7 +357,7 @@ function App() {
               onClick={startGame}
               disabled={config.selectedNumbers.length === 0}
             >
-              Start mission
+              {t.startMission}
             </button>
           </div>
         </section>
@@ -336,29 +367,29 @@ function App() {
         <section className="panel panel-large">
           <div className="status-grid">
             <div className="status-card">
-              <span className="status-label">Round</span>
+              <span className="status-label">{t.roundLabel}</span>
               <strong>{session.round}</strong>
             </div>
             <div className="status-card">
-              <span className="status-label">Question</span>
+              <span className="status-label">{t.questionLabel}</span>
               <strong>
                 {session.currentIndex + 1} / {session.questions.length}
               </strong>
             </div>
             <div className="status-card">
-              <span className="status-label">Correct</span>
+              <span className="status-label">{t.correctLabel}</span>
               <strong>{session.correctCount}</strong>
             </div>
             <div className="status-card">
-              <span className="status-label">Incorrect</span>
+              <span className="status-label">{t.incorrectLabel}</span>
               <strong>{session.incorrectCount}</strong>
             </div>
           </div>
 
-          {roundNotice ? <div className="notice-banner">{roundNotice}</div> : null}
+          {noticeText ? <div className="notice-banner">{noticeText}</div> : null}
 
           <div className="game-card">
-            <p className="section-label">Solve the multiplication</p>
+            <p className="section-label">{t.solveMultiplication}</p>
             <div className="question">{formatQuestion(currentQuestion)}</div>
 
             <form
@@ -369,7 +400,7 @@ function App() {
               }}
             >
               <label className="field answer-field">
-                <span>Your answer</span>
+                <span>{t.yourAnswer}</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -381,7 +412,7 @@ function App() {
                 />
               </label>
 
-              <div className="keypad" aria-label="Number pad">
+              <div className="keypad" aria-label={t.keypadAriaLabel}>
                 {keypadButtons.slice(0, 9).map((digit) => (
                   <button
                     key={digit}
@@ -399,7 +430,7 @@ function App() {
                   onClick={clearAnswer}
                   disabled={Boolean(feedback)}
                 >
-                  Clear
+                  {t.clear}
                 </button>
                 <button
                   type="button"
@@ -415,20 +446,20 @@ function App() {
                   onClick={removeLastDigit}
                   disabled={Boolean(feedback)}
                 >
-                  Back
+                  {t.back}
                 </button>
               </div>
 
               <div className="action-row">
                 {!feedback ? (
                   <button type="submit" className="primary-button" disabled={answer.trim() === ''}>
-                    Check answer
+                    {t.checkAnswer}
                   </button>
                 ) : (
                   <button type="button" className="primary-button" onClick={goToNextStep}>
                     {session.currentIndex === session.questions.length - 1
-                      ? 'Finish round'
-                      : 'Next question'}
+                      ? t.finishRound
+                      : t.nextQuestion}
                   </button>
                 )}
               </div>
@@ -436,15 +467,19 @@ function App() {
 
             {feedback ? (
               <div className={`feedback-card ${feedback.isCorrect ? 'success' : 'warning'}`}>
-                <strong>{feedback.isCorrect ? 'Great job!' : 'Nice try!'}</strong>
+                <strong>{feedback.isCorrect ? t.greatJob : t.niceTry}</strong>
                 <p>
                   {feedback.isCorrect
-                    ? `${formatQuestion(currentQuestion)} = ${feedback.correctAnswer}`
-                    : `${formatQuestion(currentQuestion)} = ${feedback.correctAnswer}. You answered ${feedback.childAnswer}.`}
+                    ? t.correctFeedback(formatQuestion(currentQuestion), feedback.correctAnswer)
+                    : t.incorrectFeedback(
+                        formatQuestion(currentQuestion),
+                        feedback.correctAnswer,
+                        feedback.childAnswer,
+                      )}
                 </p>
               </div>
             ) : (
-              <p className="hint centered">Collect one star for every correct answer.</p>
+              <p className="hint centered">{t.collectStarHint}</p>
             )}
           </div>
         </section>
@@ -453,47 +488,48 @@ function App() {
       {screen === 'summary' && session ? (
         <section className="panel panel-large">
           <div className="section-copy">
-            <p className="section-label">Summary</p>
-            <h2>Mission complete</h2>
+            <p className="section-label">{t.summaryLabel}</p>
+            <h2>{t.summaryTitle}</h2>
             <p>
-              You collected <strong>{session.correctCount}</strong> stars and finished{' '}
-              <strong>{session.totalQuestionCount}</strong> unique questions.
+              {t.summaryDescription(session.correctCount, session.totalQuestionCount)
+                .split(/(\d+)/)
+                .map((part, index) =>
+                  /^\d+$/.test(part) ? <strong key={index}>{part}</strong> : part,
+                )}
             </p>
           </div>
 
           <div className="summary-grid">
             <div className="summary-card">
-              <span className="status-label">Correct answers</span>
+              <span className="status-label">{t.correctAnswers}</span>
               <strong>{session.correctCount}</strong>
             </div>
             <div className="summary-card">
-              <span className="status-label">Incorrect answers</span>
+              <span className="status-label">{t.incorrectAnswers}</span>
               <strong>{session.incorrectCount}</strong>
             </div>
             <div className="summary-card">
-              <span className="status-label">Still to review</span>
+              <span className="status-label">{t.stillToReview}</span>
               <strong>{latestIncorrectAttempts.length}</strong>
             </div>
             <div className="summary-card">
-              <span className="status-label">Attempts made</span>
+              <span className="status-label">{t.attemptsMade}</span>
               <strong>{session.attempts.length}</strong>
             </div>
           </div>
 
           <div className="card review-card">
-            <h3>Questions to review</h3>
+            <h3>{t.questionsToReview}</h3>
             {latestIncorrectAttempts.length === 0 ? (
-              <p className="success-copy">
-                Amazing work. Every question has been corrected by the end of the session.
-              </p>
+              <p className="success-copy">{t.allCorrectedMessage}</p>
             ) : (
               <div className="table-wrapper">
                 <table>
                   <thead>
                     <tr>
-                      <th>Question</th>
-                      <th>Your last answer</th>
-                      <th>Correct answer</th>
+                      <th>{t.reviewQuestionColumn}</th>
+                      <th>{t.reviewLastAnswerColumn}</th>
+                      <th>{t.reviewCorrectAnswerColumn}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -512,7 +548,7 @@ function App() {
 
           <div className="action-row action-row-wide">
             <button type="button" className="secondary-button" onClick={startNewSession}>
-              New session
+              {t.newSession}
             </button>
             <button
               type="button"
@@ -520,7 +556,7 @@ function App() {
               onClick={restartWithMissedQuestions}
               disabled={latestIncorrectAttempts.length === 0}
             >
-              Retry missed questions
+              {t.retryMissedQuestions}
             </button>
           </div>
         </section>
