@@ -49,8 +49,7 @@
 
 .eyebrow,
 .section-label,
-.status-label,
-.hint {
+.status-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
