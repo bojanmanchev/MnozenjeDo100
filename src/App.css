@@ -146,7 +146,7 @@
 }
 
 .setup-grid {
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .status-grid,
@@ -190,6 +190,13 @@
 
 .number-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.operation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin-top: 16px;
 }
 

@@ -9,6 +9,7 @@ import {
   getLatestIncorrectAttempts,
   type AttemptRecord,
   type GameConfig,
+  type Operation,
   type Question,
 } from './game'
 import { getInitialLocale, getTranslation, setStoredLocale, type Locale } from './i18n'
@@ -36,6 +37,7 @@ type GameSession = {
 
 const keypadButtons = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 const locales: Locale[] = ['en', 'mk']
+const operations: Operation[] = ['multiplication', 'division']
 
 function App() {
   const [locale, setLocale] = useState<Locale>(() => getInitialLocale())
@@ -48,15 +50,21 @@ function App() {
 
   const t = getTranslation(locale)
   const selectedNumbers = new Set(config.selectedNumbers)
+  const selectedOperations = new Set(config.selectedOperations)
   const currentQuestion = session?.questions[session.currentIndex] ?? null
-  const questionCount = config.selectedNumbers.length * config.maxMultiplier
+  const questionCount =
+    config.selectedNumbers.length * config.selectedOperations.length * config.maxMultiplier
   const latestIncorrectAttempts = useMemo(
     () => (session ? getLatestIncorrectAttempts(session.attempts) : []),
     [session],
   )
   const starPreviewCount = Math.min(session?.correctCount ?? 0, 15)
-  const selectionSummary =
+  const numberSelectionSummary =
     config.selectedNumbers.length > 0 ? config.selectedNumbers.join(', ') : t.chooseAtLeastOneNumber
+  const operationSelectionSummary =
+    config.selectedOperations.length > 0
+      ? config.selectedOperations.map((operation) => t.operationOptions[operation]).join(', ')
+      : t.chooseAtLeastOneOperation
 
   useEffect(() => {
     document.title = t.metaTitle
@@ -77,6 +85,14 @@ function App() {
       : [...config.selectedNumbers, value].sort((left, right) => left - right)
 
     updateConfig({ selectedNumbers: nextSelection })
+  }
+
+  const toggleOperation = (value: Operation) => {
+    const nextSelection = selectedOperations.has(value)
+      ? config.selectedOperations.filter((operation) => operation !== value)
+      : [...config.selectedOperations, value]
+
+    updateConfig({ selectedOperations: nextSelection })
   }
 
   const startGame = () => {
@@ -301,6 +317,24 @@ function App() {
             </div>
 
             <div className="card">
+              <h3>{t.operationsToPractice}</h3>
+              <p className="hint">{t.operationSelectionHint}</p>
+              <div className="operation-grid">
+                {operations.map((operation) => (
+                  <button
+                    key={operation}
+                    type="button"
+                    className={`number-pill ${selectedOperations.has(operation) ? 'selected' : ''}`}
+                    onClick={() => toggleOperation(operation)}
+                    aria-pressed={selectedOperations.has(operation)}
+                  >
+                    {t.operationOptions[operation]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
               <h3>{t.sessionOptions}</h3>
               <label className="field">
                 <span>{t.maxMultiplier}</span>
@@ -345,7 +379,10 @@ function App() {
             <div>
               <p className="section-label">{t.sessionPreview}</p>
               <p className="preview-line">
-                <strong>{t.numbersLabel}:</strong> {selectionSummary}
+                <strong>{t.operationsLabel}:</strong> {operationSelectionSummary}
+              </p>
+              <p className="preview-line">
+                <strong>{t.numbersLabel}:</strong> {numberSelectionSummary}
               </p>
               <p className="preview-line">
                 <strong>{t.questionsLabel}:</strong> {questionCount}
@@ -355,7 +392,7 @@ function App() {
               type="button"
               className="primary-button"
               onClick={startGame}
-              disabled={config.selectedNumbers.length === 0}
+              disabled={config.selectedNumbers.length === 0 || config.selectedOperations.length === 0}
             >
               {t.startMission}
             </button>
@@ -389,7 +426,7 @@ function App() {
           {noticeText ? <div className="notice-banner">{noticeText}</div> : null}
 
           <div className="game-card">
-            <p className="section-label">{t.solveMultiplication}</p>
+            <p className="section-label">{t.solveQuestion}</p>
             <div className="question">{formatQuestion(currentQuestion)}</div>
 
             <form

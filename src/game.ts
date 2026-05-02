@@ -1,13 +1,17 @@
 export const MAX_TABLE_NUMBER = 10
 
+export type Operation = 'multiplication' | 'division'
+
 export type GameConfig = {
   selectedNumbers: number[]
+  selectedOperations: Operation[]
   maxMultiplier: number
   shuffleQuestions: boolean
   retryIncorrectAtEnd: boolean
 }
 
 export type Question = {
+  operation: Operation
   left: number
   right: number
   correctAnswer: number
@@ -22,30 +26,43 @@ export type AttemptRecord = {
 
 export const DEFAULT_CONFIG: GameConfig = {
   selectedNumbers: [2, 3],
+  selectedOperations: ['multiplication'],
   maxMultiplier: 10,
   shuffleQuestions: true,
   retryIncorrectAtEnd: true,
 }
 
 export function createQuestionKey(question: Question): string {
-  return `${question.left}x${question.right}`
+  return `${question.operation}:${question.left}:${question.right}`
 }
 
 export function formatQuestion(question: Question): string {
-  return `${question.left} × ${question.right}`
+  return `${question.left} ${question.operation === 'multiplication' ? '×' : '÷'} ${question.right}`
 }
 
 export function createQuestions(config: GameConfig): Question[] {
-  const questions = config.selectedNumbers.flatMap((left) =>
-    Array.from({ length: config.maxMultiplier }, (_, index) => {
-      const right = index + 1
+  const questions = config.selectedOperations.flatMap((operation) =>
+    config.selectedNumbers.flatMap((selectedNumber) =>
+      Array.from({ length: config.maxMultiplier }, (_, index) => {
+        const stepValue = index + 1
 
-      return {
-        left,
-        right,
-        correctAnswer: left * right,
-      }
-    }),
+        if (operation === 'division') {
+          return {
+            operation,
+            left: selectedNumber * stepValue,
+            right: selectedNumber,
+            correctAnswer: stepValue,
+          }
+        }
+
+        return {
+          operation,
+          left: selectedNumber,
+          right: stepValue,
+          correctAnswer: selectedNumber * stepValue,
+        }
+      }),
+    ),
   )
 
   return config.shuffleQuestions ? shuffleQuestions(questions) : questions
